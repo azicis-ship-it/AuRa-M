@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AURA CHECK ◈ what's your aura today?</title>
+<meta name="description" content="Tu energía cambia cada día — descubrí qué aura te define hoy.">
+<meta name="theme-color" content="#050505">
+<meta property="og:title" content="AURA CHECK ◈">
+<meta property="og:description" content="i just got my aura read... what's yours?">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#050505;color:#fff;font-family:'Sora','SF Pro Display',-apple-system,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh}
+
+@keyframes float0{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-30px) scale(1.1)}}
+@keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-25px,20px) scale(0.9)}}
+@keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(15px,25px) scale(1.05)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(255,255,255,0.05)}50%{box-shadow:0 0 40px rgba(255,255,255,0.1)}}
+@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes particle{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.container{max-width:440px;margin:0 auto;padding:20px 16px;position:relative;z-index:1;min-height:100dvh;animation:fadeIn .4s ease-out}
+.orb{position:fixed;border-radius:50%;opacity:.08;filter:blur(40px);pointer-events:none;z-index:0}
+
+.btn{width:100%;padding:16px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;color:#fff;font-size:15px;font-family:'Sora',sans-serif;font-weight:400;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1);text-align:left;position:relative}
+.btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);transform:translateX(4px)}
+.btn:active{transform:scale(.97)}
+
+.cta{width:100%;padding:18px;border-radius:16px;border:none;font-size:16px;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block}
+.cta:active{transform:scale(.97)}
+
+.product-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1)}
+.product-card:hover{background:rgba(255,255,255,.08);transform:translateY(-2px)}
+
+.streak-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;font-size:13px;font-family:'Space Mono',monospace;color:rgba(255,255,255,.7)}
+.nav-pill{padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.5);font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s}
+.nav-pill:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-pill.active{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.15)}
+
+.progress-dot{width:8px;height:8px;border-radius:50%;transition:all .3s;display:inline-block}
+.mono{font-family:'Space Mono',monospace}
+
+.modal-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);backdrop-filter:blur(20px);display:flex;align-items:flex-end;justify-content:center}
+.modal-sheet{width:100%;max-width:440px;background:#111;border-radius:24px 24px 0 0;padding:32px;animation:slideUp .3s ease-out}
+.modal-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 24px}
+
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- Floating Orbs Background -->
+<div id="orbs"></div>
+
+<!-- App Container -->
+<div class="container" id="app"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   AURA CHECK — Single-file app
+   ═══════════════════════════════════════════ */
+
+const AURAS = {
+  obsidian: {
+    name:"Obsidian", emoji:"🖤",
+    gradient:"linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#16213e 100%)",
+    accent:"#8b5cf6",
+    desc:"Mysterious. Magnetic. Main character coded.",
+    vibe:"You walk into a room and the playlist changes.",
+    aesthetic:"Dark academia meets cyber goth",
+    matches:["Chrome jewelry","Platform boots","Black nail sets","LED strip lights"],
+    prices:["$12.99","$34.99","$8.99","$15.99"],
+    icons:["💍","👢","💅","💡"],
+    links:["#","#","#","#"], // ← YOUR AFFILIATE LINKS HERE
+    rarity:"Legendary", rarityColor:"#f59e0b", points:847
+  },
+  seafoam: {
+    name:"Seafoam", emoji:"🫧",
+    gradient:"linear-gradient(135deg,#0d9488 0%,#2dd4bf 40%,#a7f3d0 100%)",
+    accent:"#0d9488",
+    desc:"Calm but electric. The eye of the storm.",
+    vibe:"People feel safe around you but can't explain why.",
+    aesthetic:"Mermaidcore meets clean girl",
+    matches:["Pearl hair clips","Tinted SPF","Matcha set","Shell earrings"],
+    prices:["$9.99","$22.99","$18.99","$11.99"],
+    icons:["✨","☀️","🍵","🐚"],
+    links:["#","#","#","#"],
+    rarity:"Rare", rarityColor:"#2dd4bf", points:623
+  },
+  molten: {
+    name:"Molten", emoji:"🔥",
+    gradient:"linear-gradient(135deg,#7c2d12 0%,#dc2626 40%,#f97316 100%)",
+    accent:"#f97316",
+    desc:"Unhinged energy. Zero filter. Full send.",
+    vibe:"Your group chat is never boring because of you.",
+    aesthetic:"Y2K chaos meets streetwear",
+    matches:["Chunky rings","Graphic baby tee","Red lip kit","Mini speakers"],
+    prices:["$14.99","$19.99","$16.99","$24.99"],
+    icons:["💎","👕","💋","🔊"],
+    links:["#","#","#","#"],
+    rarity:"Epic", rarityColor:"#ef4444", points:756
+  },
+  lavender: {
+    name:"Lavender Haze", emoji:"💜",
+    gradient:"linear-gradient(135deg,#581c87 0%,#a855f7 40%,#e9d5ff 100%)",
+    accent:"#a855f7",
+    desc:"Soft power. Delulu but make it fashion.",
+    vibe:"You manifest things by accident.",
+    aesthetic:"Coquette meets ethereal",
+    matches:["Ribbon choker","Lip gloss set","Cloud slides","Fairy lights"],
+    prices:["$7.99","$13.99","$21.99","$12.99"],
+    icons:["🎀","✨","☁️","🧚"],
+    links:["#","#","#","#"],
+    rarity:"Ultra Rare", rarityColor:"#c084fc", points:912
+  },
+  void: {
+    name:"The Void", emoji:"🌀",
+    gradient:"linear-gradient(135deg,#020617 0%,#1e1b4b 40%,#312e81 100%)",
+    accent:"#6366f1",
+    desc:"NPC? Never. You broke the simulation.",
+    vibe:"Your Spotify Wrapped confuses the algorithm.",
+    aesthetic:"Glitchcore meets avant-garde",
+    matches:["Holographic phone case","Cyber sunglasses","LED shoes","Tech gloves"],
+    prices:["$11.99","$16.99","$39.99","$14.99"],
+    icons:["📱","🕶️","👟","🧤"],
+    links:["#","#","#","#"],
+    rarity:"Mythic", rarityColor:"#818cf8", points:999
+  }
+};
+
+const QUESTIONS = [
+  { q:"Pick a vibe for tonight:", opts:[
+    {text:"Lights off, headphones on",aura:"obsidian"},
+    {text:"Sunset picnic, no phones",aura:"seafoam"},
+    {text:"We're going OUT out",aura:"molten"},
+    {text:"Candles + journaling",aura:"lavender"},
+    {text:"3am deep dive on something unhinged",aura:"void"}
+  ]},
+  { q:"Your friend just texted 'we need to talk'. You:", opts:[
+    {text:"Already know what it's about",aura:"obsidian"},
+    {text:"Send a calming voice note back",aura:"seafoam"},
+    {text:"Call immediately, no text games",aura:"molten"},
+    {text:"Overthink for 45 min then reply 'ok'",aura:"lavender"},
+    {text:"Ghost for 3 hours then send a meme",aura:"void"}
+  ]},
+  { q:"Your core color palette:", opts:[
+    {text:"All black. Always.",aura:"obsidian"},
+    {text:"Sage, cream, soft blue",aura:"seafoam"},
+    {text:"Red, orange, gold",aura:"molten"},
+    {text:"Lilac, pink, pearl",aura:"lavender"},
+    {text:"Iridescent / whatever doesn't match",aura:"void"}
+  ]},
+  { q:"Pick a superpower:", opts:[
+    {text:"Mind reading (selective)",aura:"obsidian"},
+    {text:"Healing touch",aura:"seafoam"},
+    {text:"Fire manipulation obviously",aura:"molten"},
+    {text:"Time reversal (just 5 min)",aura:"lavender"},
+    {text:"Glitch through walls",aura:"void"}
+  ]},
+  { q:"Your phone wallpaper rn:", opts:[
+    {text:"Pure black or a moody photo",aura:"obsidian"},
+    {text:"Nature / ocean / sky",aura:"seafoam"},
+    {text:"Me and my friends being iconic",aura:"molten"},
+    {text:"Aesthetic collage I made at 2am",aura:"lavender"},
+    {text:"Something that confuses everyone",aura:"void"}
+  ]}
+];
+
+/* ─── State ─── */
+let state = {
+  screen: "home",
+  currentQ: 0,
+  answers: [],
+  result: null,
+  showProduct: null,
+};
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem("aura_data")) || {}; } catch { return {}; }
+}
+function saveData(d) {
+  try { localStorage.setItem("aura_data", JSON.stringify(d)); } catch {}
+}
+function today() { return new Date().toISOString().split("T")[0]; }
+
+function getCountdown() {
+  const now = new Date();
+  const tom = new Date(now); tom.setHours(24,0,0,0);
+  const d = tom - now;
+  return Math.floor(d/3600000) + "h " + Math.floor((d%3600000)/60000) + "m";
+}
+
+/* ─── Orbs ─── */
+function renderOrbs(accent) {
+  const c1 = accent || "#6366f1";
+  const c2 = accent || "#a855f7";
+  let h = "";
+  for (let i = 0; i < 6; i++) {
+    const s = 80 + i * 40;
+    const col = i % 2 === 0 ? c1 : c2;
+    h += `<div class="orb" style="width:${s}px;height:${s}px;background:${col};left:${10+i*15}%;top:${5+((i*37)%80)}%;animation:float${i%3} ${6+i*2}s ease-in-out infinite"></div>`;
+  }
+  document.getElementById("orbs").innerHTML = h;
+}
+
+/* ─── Render Engine ─── */
+const $ = id => document.getElementById(id);
+const app = () => document.getElementById("app");
+
+function render() {
+  const data = getData();
+  const streak = data.streak || 0;
+  const collected = data.collected || [];
+  const alreadyDone = data.lastDate === today();
+
+  renderOrbs(state.result ? state.result.accent : null);
+
+  switch(state.screen) {
+    case "home": renderHome(streak, collected, alreadyDone); break;
+    case "quiz": renderQuiz(); break;
+    case "result": renderResult(collected); break;
+    case "vault": renderVault(collected); break;
+  }
+}
+
+/* ═══════ HOME ═══════ */
+function renderHome(streak, collected, alreadyDone) {
+  app().innerHTML = `
+    <div style="animation:fadeIn .4s ease-out">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:14px;animation:glow 3s ease-in-out infinite">◈</div>
+          <span class="mono" style="font-size:13px;color:rgba(255,255,255,.5)">AURA CHECK</span>
+        </div>
+        ${streak > 0 ? `<div class="streak-badge">🔥 ${streak} day streak</div>` : ""}
+      </div>
+
+      <!-- Hero -->
+      <div style="text-align:center;margin-bottom:48px">
+        <div style="width:120px;height:120px;margin:0 auto 28px;border-radius:50%;background:linear-gradient(135deg,#6366f1 0%,#a855f7 50%,#ec4899 100%);display:flex;align-items:center;justify-content:center;font-size:48px;box-shadow:0 0 60px rgba(99,102,241,.3);animation:glow 4s ease-in-out infinite;position:relative">
+          <div style="position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(255,255,255,.1);animation:rotate 20s linear infinite">
+            <div style="position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:#fff;transform:translateX(-50%)"></div>
+          </div>
+          ◈
+        </div>
+        <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;margin-bottom:12px;background:linear-gradient(135deg,#fff 30%,rgba(255,255,255,.6));-webkit-background-clip:text;-webkit-text-fill-color:transparent">what's your aura today?</h1>
+        <p style="font-size:15px;color:rgba(255,255,255,.45);line-height:1.5;max-width:300px;margin:0 auto">5 questions. your aura shifts daily.<br><span style="color:rgba(255,255,255,.25)">only you know what it means.</span></p>
+      </div>
+
+      <!-- CTAs -->
+      <button class="cta" onclick="startQuiz()" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;margin-bottom:16px">
+        ${alreadyDone ? "◈ see today's aura" : "◈ read my aura"}
+      </button>
+      <button class="cta" onclick="goVault()" style="background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.08)">
+        aura vault → ${collected.length}/5
+      </button>
+
+      <!-- Nav Pills -->
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:32px">
+        <span class="nav-pill active">daily check</span>
+        <span class="nav-pill" onclick="goVault()">my auras</span>
+        <span class="nav-pill">aura shop</span>
+      </div>
+
+      ${alreadyDone ? `<div style="text-align:center;margin-top:24px" class="mono" style="font-size:11px;color:rgba(255,255,255,.2)"><span style="font-size:11px;color:rgba(255,255,255,.2)">next aura check in ${getCountdown()}</span></div>` : ""}
+    </div>
+  `;
+}
+
+/* ═══════ QUIZ ═══════ */
+function renderQuiz() {
+  const q = QUESTIONS[state.currentQ];
+  const dots = QUESTIONS.map((_, i) => {
+    const active = i === state.currentQ;
+    const done = i < state.currentQ;
+    return `<span class="progress-dot" style="background:${done ? "#a855f7" : active ? "#fff" : "rgba(255,255,255,.15)"};width:${active ? "24px" : "8px"};border-radius:${active ? "4px" : "50%"};display:inline-block;height:8px;transition:all .3s"></span>`;
+  }).join("");
+
+  const opts = q.opts.map((o, i) => `
+    <button class="btn" onclick="answer('${o.aura}')" style="animation:slideUp .4s ease-out ${i*.08}s both">
+      <span style="opacity:.3;margin-right:12px" class="mono" style="font-size:12px">${String.fromCharCode(65+i)}</span>
+      ${o.text}
+    </button>
+  `).join("");
+
+  app().innerHTML = `
+    <div style="animation:fadeIn .4s ease-out">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+        <button onclick="goHome()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-family:'Sora',sans-serif;font-size:14px">← back</button>
+        <div style="display:flex;gap:8px">${dots}</div>
+        <span class="mono" style="font-size:12px;color:rgba(255,255,255,.3)">${state.currentQ+1}/5</span>
+      </div>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:32px;line-height:1.3">${q.q}</h2>
+      <div style="display:flex;flex-direction:column;gap:12px">${opts}</div>
+    </div>
+  `;
+}
+
+/* ═══════ RESULT ═══════ */
+function renderResult(collected) {
+  const r = state.result;
+  if (!r) return;
+
+  const products = r.matches.map((item, i) => `
+    <div class="product-card" onclick="showProduct(${i})" style="animation:slideUp .4s ease-out ${.1+i*.1}s both">
+      <div style="font-size:32px;margin-bottom:12px;height:64px;display:flex;align-items:center;justify-content:center;background:${r.accent}08;border-radius:12px">${r.icons[i]}</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${item}</div>
+      <div class="mono" style="font-size:12px;color:${r.accent}">${r.prices[i]}</div>
+    </div>
+  `).join("");
+
+  app().innerHTML = `
+    <div style="animation:fadeIn .4s ease-out">
+      <!-- Aura Card -->
+      <div style="background:${r.gradient};border-radius:24px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden;animation:scaleIn .6s cubic-bezier(.16,1,.3,1)">
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;border:1px solid rgba(255,255,255,.1)"></div>
+        <div style="position:absolute;bottom:-20px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.03)"></div>
+        <div style="position:relative;z-index:1">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+            <div style="padding:4px 12px;border-radius:100px;background:rgba(0,0,0,.3);backdrop-filter:blur(10px);font-size:11px;color:${r.rarityColor};border:1px solid ${r.rarityColor}33" class="mono">✦ ${r.rarity}</div>
+            <div class="mono" style="font-size:11px;color:rgba(255,255,255,.5)">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+          </div>
+          <div style="font-size:56px;margin-bottom:16px">${r.emoji}</div>
+          <h2 style="font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">${r.name}</h2>
+          <p style="font-size:16px;font-weight:300;opacity:.8;margin-bottom:16px;line-height:1.4">${r.desc}</p>
+          <div style="padding:12px 16px;background:rgba(0,0,0,.2);border-radius:12px;font-size:13px;font-style:italic;opacity:.7;line-height:1.4">"${r.vibe}"</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:12px 16px;background:rgba(0,0,0,.15);border-radius:12px">
+            <span class="mono" style="font-size:12px;opacity:.6">AURA POINTS</span>
+            <span class="mono" style="font-size:20px;font-weight:700;background:linear-gradient(90deg,#fff,rgba(255,255,255,.7));background-size:200% center;animation:shimmer 3s linear infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent">+${r.points}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aesthetic -->
+      <div style="text-align:center;margin-bottom:24px;font-size:12px;color:${r.accent};padding:8px 16px;background:${r.accent}10;border-radius:100px;border:1px solid ${r.accent}20" class="mono">${r.aesthetic}</div>
+
+      <!-- Products -->
+      <div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-size:18px;font-weight:700">aura matches ✦</h3>
+          <span class="mono" style="font-size:11px;color:rgba(255,255,255,.3)">curated 4 u</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${products}</div>
+      </div>
+
+      <!-- PRO -->
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:12px;right:12px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,#f59e0b,#ef4444);font-size:10px;font-weight:700" class="mono">PRO</div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">unlock full aura reading</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:16px">compatibility scores • aura history • rare drops • weekly forecast</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${["🔮 deep read","💫 compatibility","📊 aura graph","🎯 forecast"].map(f => `<span style="padding:6px 12px;background:rgba(255,255,255,.05);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5)">${f}</span>`).join("")}
+        </div>
+        <button class="cta" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;margin-top:16px;font-size:14px">$2.99/week • try free for 7 days</button>
+      </div>
+
+      <!-- Share + Home -->
+      <div style="display:flex;gap:12px;margin-bottom:24px">
+        <button class="cta" onclick="shareAura()" style="flex:1;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1)">share aura</button>
+        <button class="cta" onclick="goHome()" style="flex:1;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.06)">home ↻</button>
+      </div>
+
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,.15)" class="mono">aura resets in ${getCountdown()}</div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="hidden"></div>
+  `;
+}
+
+/* ═══════ VAULT ═══════ */
+function renderVault(collected) {
+  const items = Object.entries(AURAS).map(([key, a], i) => {
+    const unlocked = collected.includes(key);
+    return `
+      <div style="background:${unlocked ? a.gradient : "rgba(255,255,255,.02)"};border-radius:16px;padding:20px;opacity:${unlocked ? 1 : .4};border:1px solid ${unlocked ? "transparent" : "rgba(255,255,255,.06)"};display:flex;align-items:center;gap:16px;animation:slideUp .4s ease-out ${i*.08}s both">
+        <div style="font-size:32px">${unlocked ? a.emoji : "🔒"}</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700;margin-bottom:2px">${unlocked ? a.name : "???"}</div>
+          <div class="mono" style="font-size:11px;color:${unlocked ? a.rarityColor : "rgba(255,255,255,.3)"}">
+            ${unlocked ? `✦ ${a.rarity} • ${a.points} pts` : "keep checking daily"}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const allUnlocked = collected.length >= 5;
+  app().innerHTML = `
+    <div style="animation:fadeIn .4s ease-out">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+        <button onclick="goHome()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-family:'Sora',sans-serif;font-size:14px">← back</button>
+        <h2 style="font-size:18px;font-weight:700">aura vault</h2>
+        <div style="width:48px"></div>
+      </div>
+      <p style="font-size:14px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:24px;line-height:1.5">collect all 5 auras to unlock<br>the ✦ hidden 6th aura ✦</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${items}
+        <!-- Secret 6th -->
+        <div style="padding:20px;border-radius:16px;background:${allUnlocked ? "linear-gradient(135deg,#fbbf24,#f97316,#ef4444,#a855f7,#6366f1)" : "rgba(255,255,255,.02)"};border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px;opacity:${allUnlocked ? 1 : .3}">
+          <div style="font-size:32px">${allUnlocked ? "👁️" : "❓"}</div>
+          <div>
+            <div style="font-size:16px;font-weight:700">${allUnlocked ? "The Oracle" : "??? hidden aura ???"}</div>
+            <div class="mono" style="font-size:11px;color:rgba(255,255,255,.4)">${allUnlocked ? "✦ Transcendent • ∞ pts" : `collect all 5 to unlock (${collected.length}/5)`}</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:24px;font-size:11px;color:rgba(255,255,255,.2)" class="mono">${collected.length}/5 collected • check daily for new auras</div>
+    </div>
+  `;
+}
+
+/* ═══════ ACTIONS ═══════ */
+function goHome() {
+  state.screen = "home";
+  state.currentQ = 0;
+  state.answers = [];
+  state.showProduct = null;
+  render();
+}
+
+function goVault() {
+  state.screen = "vault";
+  render();
+}
+
+function startQuiz() {
+  const data = getData();
+  if (data.lastDate === today() && data.lastAura && AURAS[data.lastAura]) {
+    state.result = AURAS[data.lastAura];
+    state.screen = "result";
+  } else {
+    state.screen = "quiz";
+    state.currentQ = 0;
+    state.answers = [];
+  }
+  render();
+}
+
+function answer(aura) {
+  state.answers.push(aura);
+  if (state.currentQ < QUESTIONS.length - 1) {
+    state.currentQ++;
+    render();
+  } else {
+    // Calculate winner
+    const counts = {};
+    state.answers.forEach(a => counts[a] = (counts[a]||0) + 1);
+    const winner = Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0];
+    state.result = AURAS[winner];
+
+    // Save
+    const data = getData();
+    const t = today();
+    const yesterday = new Date(Date.now()-86400000).toISOString().split("T")[0];
+    let newStreak = 1;
+    if (data.lastDate === yesterday) newStreak = (data.streak||0) + 1;
+    else if (data.lastDate === t) newStreak = data.streak || 1;
+    const newCollected = [...new Set([...(data.collected||[]), winner])];
+    saveData({ streak:newStreak, lastDate:t, collected:newCollected, lastAura:winner });
+
+    state.screen = "result";
+    render();
+  }
+}
+
+function showProduct(i) {
+  const r = state.result;
+  if (!r) return;
+  const modal = document.getElementById("productModal");
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeProduct()">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-handle"></div>
+        <div style="text-align:center">
+          <div style="font-size:56px;margin-bottom:16px">${r.icons[i]}</div>
+          <h3 style="font-size:22px;font-weight:700;margin-bottom:8px">${r.matches[i]}</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:8px">Matched to your ${r.name} aura</p>
+          <div class="mono" style="font-size:24px;color:${r.accent};margin-bottom:24px">${r.prices[i]}</div>
+          <a href="${r.links[i]}" target="_blank" rel="noopener" class="cta" style="background:${r.accent};color:#fff;margin-bottom:12px">cop this →</a>
+          <p class="mono" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:8px">affiliate link • you support aura check</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function closeProduct() {
+  const m = document.getElementById("productModal");
+  if (m) m.className = "hidden";
+}
+
+async function shareAura() {
+  const r = state.result;
+  if (!r) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080; canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+
+  // Background gradient
+  const colors = {
+    "Obsidian":["#0a0a0a","#1a1a2e","#16213e"],
+    "Seafoam":["#0d9488","#2dd4bf","#a7f3d0"],
+    "Molten":["#7c2d12","#dc2626","#f97316"],
+    "Lavender Haze":["#581c87","#a855f7","#e9d5ff"],
+    "The Void":["#020617","#1e1b4b","#312e81"]
+  };
+  const c = colors[r.name] || ["#111","#222","#333"];
+  const grad = ctx.createLinearGradient(0,0,1080,1920);
+  grad.addColorStop(0, c[0]); grad.addColorStop(.5, c[1]); grad.addColorStop(1, c[2]);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,1080,1920);
+
+  // Decorative
+  ctx.globalAlpha = .06; ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.arc(900,200,300,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(200,1600,200,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Text
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.font = "600 28px Sora,sans-serif";
+  ctx.fillText("◈  AURA CHECK", 540, 300);
+  ctx.font = "160px serif"; ctx.fillText(r.emoji, 540, 700);
+  ctx.fillStyle = "#fff"; ctx.font = "800 72px Sora,sans-serif";
+  ctx.fillText(r.name, 540, 860);
+  ctx.fillStyle = r.rarityColor; ctx.font = "700 28px 'Space Mono',monospace";
+  ctx.fillText("✦ " + r.rarity, 540, 930);
+  ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.font = "400 36px Sora,sans-serif";
+  ctx.fillText(r.desc, 540, 1040);
+  ctx.fillStyle = "rgba(255,255,255,.4)"; ctx.font = "italic 300 30px Sora,sans-serif";
+  ctx.fillText('"' + r.vibe + '"', 540, 1160);
+  ctx.fillStyle = "#fff"; ctx.font = "700 48px 'Space Mono',monospace";
+  ctx.fillText("+" + r.points + " pts", 540, 1340);
+  ctx.fillStyle = r.accent; ctx.font = "400 26px 'Space Mono',monospace";
+  ctx.fillText(r.aesthetic, 540, 1420);
+  ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.font = "400 24px Sora,sans-serif";
+  ctx.fillText("what's YOUR aura? check yours now", 540, 1700);
+
+  const dataUrl = canvas.toDataURL("image/png");
+
+  // Try native share
+  try {
+    if (navigator.share && navigator.canShare) {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "my-aura.png", { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: `My aura is ${r.name} ◈`, text: r.desc, files: [file] });
+        return;
+      }
+    }
+  } catch {}
+
+  // Fallback: download
+  const link = document.createElement("a");
+  link.download = "my-aura-" + r.name.toLowerCase().replace(/\s/g,"-") + ".png";
+  link.href = dataUrl;
+  link.click();
+}
+
+/* ─── Init ─── */
+render();
+</script>
+</body>
+</html>
